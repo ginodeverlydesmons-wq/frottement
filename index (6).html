@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#232838">
+<title>Frottement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..600,100&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ECE8DF; --bg2:#E2DDD2; --ink:#2A2D3A; --ink2:#6B6E7C; --line:#CFC9BC;
+  --lamp:#B8772A; --lamp-ink:#FFF8EC; --sage:#4F7A5A; --sage-ink:#F1F7F2;
+  --glow:rgba(184,119,42,.16);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#232838; --bg2:#2C3245; --ink:#F1EEE6; --ink2:#A4A8B6; --line:#3D4357;
+    --lamp:#E8B86D; --lamp-ink:#2A2338; --sage:#9DBBA3; --sage-ink:#1E2A22;
+    --glow:rgba(232,184,109,.14);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#232838; --bg2:#2C3245; --ink:#F1EEE6; --ink2:#A4A8B6; --line:#3D4357;
+  --lamp:#E8B86D; --lamp-ink:#2A2338; --sage:#9DBBA3; --sage-ink:#1E2A22;
+  --glow:rgba(232,184,109,.14);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:17px; line-height:1.5;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  -webkit-font-smoothing:antialiased;
+}
+.serif{font-family:"Fraunces",Georgia,"Times New Roman",serif;font-variation-settings:"SOFT" 100,"opsz" 96}
+main{max-width:30rem;margin:0 auto;padding:1.25rem 1.25rem 6.5rem;min-height:100dvh}
+.screen{display:none}
+.screen.on{display:block}
+h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-variation-settings:"SOFT" 100,"opsz" 96;font-weight:400;margin:0;line-height:1.1}
+h1{font-size:clamp(2.4rem,9vw,3.4rem);letter-spacing:-.01em}
+h2{font-size:1.7rem;margin:1.6rem 0 .6rem}
+h3{font-size:1.2rem;margin:1.2rem 0 .4rem}
+p{margin:.4rem 0}
+.muted{color:var(--ink2)}
+.small{font-size:.92rem}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0;-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--lamp);outline-offset:3px;border-radius:.4rem}
+
+/* ---------- Pause ---------- */
+.apps{display:flex;gap:.45rem;flex-wrap:wrap;margin:.2rem 0 2.2rem}
+.chip{border:1.5px solid var(--line);border-radius:999px;padding:.35rem .85rem;font-size:.95rem;color:var(--ink2);transition:background .15s,color .15s,border-color .15s}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.question{margin:0 0 2rem}
+.question .hour{display:block;font-size:1rem;color:var(--ink2);font-family:"Atkinson Hyperlegible",system-ui,sans-serif;margin-bottom:.8rem}
+.reasons{display:grid;gap:.7rem}
+.reason{
+  text-align:left;width:100%;padding:1.1rem 1.2rem;border-radius:1.1rem;
+  background:var(--bg2);border:1.5px solid transparent;font-size:1.15rem;
+  transition:border-color .15s,transform .15s;
+}
+.reason:active{transform:scale(.985)}
+.reason em{display:block;font-style:normal;font-size:.9rem;color:var(--ink2);margin-top:.15rem}
+
+.breath{display:none;text-align:center;padding:1rem 0 0}
+.breath.on{display:block}
+.circle{
+  width:8.5rem;height:8.5rem;margin:1.5rem auto 1.2rem;border-radius:50%;
+  background:radial-gradient(circle at 50% 45%,var(--lamp) 0%,var(--lamp) 40%,transparent 72%);
+  opacity:.9;transform:scale(.55);animation:inhale 3.2s ease-in-out forwards;
+}
+@keyframes inhale{0%{transform:scale(.55);opacity:.55}100%{transform:scale(1);opacity:.95}}
+.breath .word{font-size:1.25rem}
+.decide{display:none;gap:.7rem;margin-top:1.6rem}
+.decide.on{display:grid}
+.go,.stay{padding:1.05rem 1.2rem;border-radius:1.1rem;font-size:1.15rem;width:100%}
+.go{background:var(--lamp);color:var(--lamp-ink)}
+.stay{background:var(--sage);color:var(--sage-ink)}
+.decide .small{margin:.2rem 0 0;text-align:center}
+@media (prefers-reduced-motion: reduce){
+  .circle{animation:none;transform:scale(1)}
+  .reason,.chip,.go,.stay{transition:none}
+}
+
+/* ---------- Miroir ---------- */
+.fig{display:flex;gap:1.6rem;flex-wrap:wrap;margin:.4rem 0 .8rem}
+.fig div{min-width:6rem}
+.fig b{display:block;font-family:"Fraunces",Georgia,serif;font-variation-settings:"SOFT" 100,"opsz" 96;font-weight:400;font-size:2.4rem;line-height:1}
+.fig span{color:var(--ink2);font-size:.92rem}
+.bars{display:grid;gap:.5rem;margin:.3rem 0 .6rem}
+.bar{display:grid;grid-template-columns:9.5rem 1fr 2.5rem;align-items:center;gap:.6rem;font-size:.95rem}
+.bar i{display:block;height:.7rem;border-radius:999px;background:var(--lamp);min-width:2px}
+.bar i.s{background:var(--sage)}
+.bar span:last-child{text-align:right;color:var(--ink2)}
+svg.hours{width:100%;height:auto;display:block;margin:.4rem 0 .2rem}
+.insight{background:var(--glow);border-radius:1.1rem;padding:1rem 1.15rem;margin:1rem 0}
+.insight p{margin:.25rem 0}
+.log{list-style:none;padding:0;margin:.4rem 0 0;border-top:1px solid var(--line)}
+.log li{display:flex;justify-content:space-between;gap:.8rem;padding:.55rem 0;border-bottom:1px solid var(--line);font-size:.95rem}
+.log li span:last-child{color:var(--ink2);white-space:nowrap}
+.empty{padding:2rem 0;text-align:center;color:var(--ink2)}
+
+/* ---------- Réglages ---------- */
+.row{display:flex;gap:.6rem;align-items:center;padding:.55rem 0;border-bottom:1px solid var(--line)}
+.row .name{flex:1}
+.row code{font-size:.85rem;color:var(--ink2)}
+.row .x{color:var(--ink2);padding:.3rem .5rem;font-size:1.1rem}
+form.add{display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;margin:.8rem 0 0}
+input,select{font:inherit;color:var(--ink);background:var(--bg2);border:1.5px solid var(--line);border-radius:.7rem;padding:.6rem .75rem;min-width:0;width:100%}
+.btn{padding:.6rem 1rem;border-radius:.7rem;background:var(--ink);color:var(--bg);font-size:.95rem;white-space:nowrap}
+.btn.ghost{background:var(--bg2);color:var(--ink);border:1.5px solid var(--line)}
+.actions{display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0}
+details{border-top:1px solid var(--line);padding:.6rem 0}
+summary{cursor:pointer;font-family:"Fraunces",Georgia,serif;font-variation-settings:"SOFT" 100,"opsz" 96;font-size:1.2rem;padding:.3rem 0}
+details ol{padding-left:1.2rem;margin:.4rem 0}
+details li{margin:.35rem 0}
+.link{word-break:break-all;background:var(--bg2);padding:.5rem .7rem;border-radius:.6rem;font-size:.85rem;display:block;margin:.4rem 0}
+.toast{position:fixed;left:50%;bottom:5.4rem;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:.6rem 1rem;border-radius:999px;font-size:.95rem;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
+.toast.on{opacity:1}
+
+/* ---------- Nav ---------- */
+nav{
+  position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);
+  padding:.5rem 0 calc(.5rem + env(safe-area-inset-bottom));
+}
+nav div{max-width:30rem;margin:0 auto;display:flex;justify-content:space-around}
+nav button{padding:.5rem 1.2rem;color:var(--ink2);font-size:1rem;border-radius:.6rem}
+nav button[aria-current="page"]{color:var(--ink);font-weight:700}
+</style>
+</head>
+<body>
+<main>
+
+<!-- ===== PAUSE ===== -->
+<section id="pause" class="screen on" aria-labelledby="qtitle">
+  <div id="askBlock">
+    <div class="apps" id="apps" role="group" aria-label="Quelle appli t'attire ?"></div>
+    <h1 id="qtitle" class="question"><span class="hour" id="hour"></span>Tu cherches quoi, là&nbsp;?</h1>
+    <div class="reasons">
+      <button class="reason" data-reason="info">Une info précise<em>Je sais ce que je viens chercher</em></button>
+      <button class="reason" data-reason="evade">Me changer les idées<em>J'ai besoin d'une soupape</em></button>
+      <button class="reason" data-reason="reflex">Rien, réflexe<em>Le doigt est parti tout seul</em></button>
+    </div>
+    <p class="muted small" style="margin-top:1.6rem">Aucune réponse n'est mauvaise. Tu passes dans tous les cas.</p>
+  </div>
+
+  <div class="breath" id="breath">
+    <div class="circle" aria-hidden="true"></div>
+    <p class="serif word" id="breathWord">Respire.</p>
+    <div class="decide" id="decide">
+      <button class="go" id="goBtn">Y aller</button>
+      <button class="stay" id="stayBtn">Finalement, non</button>
+      <p class="small muted" id="hint"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MIROIR ===== -->
+<section id="miroir" class="screen" aria-labelledby="mtitle">
+  <h1 id="mtitle">Miroir</h1>
+  <p class="muted">Ce que tes pauses racontent, sans jugement.</p>
+  <div id="miroirBody"></div>
+</section>
+
+<!-- ===== RÉGLAGES ===== -->
+<section id="reglages" class="screen" aria-labelledby="rtitle">
+  <h1 id="rtitle">Réglages</h1>
+
+  <h2>Tes applis</h2>
+  <p class="muted small">Le schéma d'URL sert au bouton « Y aller » pour rouvrir l'appli.</p>
+  <div id="appList"></div>
+  <form class="add" id="addForm">
+    <input id="newName" placeholder="Nom (ex. Reddit)" aria-label="Nom de l'appli" required>
+    <input id="newScheme" placeholder="Schéma (ex. reddit://)" aria-label="Schéma d'URL">
+    <button class="btn" type="submit">Ajouter</button>
+  </form>
+
+  <h2>Apparence</h2>
+  <select id="theme" aria-label="Thème">
+    <option value="auto">Suivre le téléphone</option>
+    <option value="light">Clair</option>
+    <option value="dark">Sombre</option>
+  </select>
+
+  <h2>Tes données</h2>
+  <p class="muted small">Tout reste dans ce téléphone, dans ce navigateur. Rien ne part ailleurs.</p>
+  <div class="actions">
+    <button class="btn ghost" id="exportBtn">Copier une sauvegarde</button>
+    <button class="btn ghost" id="importBtn">Restaurer une sauvegarde</button>
+    <button class="btn ghost" id="resetBtn">Tout effacer</button>
+  </div>
+
+  <h2>Brancher Frottement au téléphone</h2>
+  <p class="muted small">Pour que la pause s'affiche toute seule quand tu ouvres une appli.</p>
+  <p class="small">Lien à utiliser dans l'automatisation (remplace <code>instagram</code> par l'appli voulue) :</p>
+  <span class="link" id="autoLink"></span>
+
+  <details>
+    <summary>iPhone — app Raccourcis</summary>
+    <ol>
+      <li>Ouvre l'appli <b>Raccourcis</b>, onglet <b>Automatisation</b>, puis <b>+</b> (Nouvelle automatisation).</li>
+      <li>Choisis <b>App</b>, coche <b>Est ouverte</b>, sélectionne <b>Instagram</b>, puis <b>Exécuter immédiatement</b>.</li>
+      <li>Touche <b>Nouveau raccourci vide</b>, cherche l'action <b>Ouvrir des URL</b> et colle le lien ci‑dessus.</li>
+      <li>Valide. Désormais, ouvrir Instagram affichera d'abord la pause 🧘</li>
+      <li>Bonus : dans Safari, bouton Partager → <b>Sur l'écran d'accueil</b> pour avoir Frottement comme une vraie appli.</li>
+    </ol>
+  </details>
+  <details>
+    <summary>Android — app MacroDroid (gratuite)</summary>
+    <ol>
+      <li>Installe <b>MacroDroid</b> depuis le Play Store et ouvre-la.</li>
+      <li><b>Ajouter une macro</b> → Déclencheur : <b>Application lancée/fermée</b> → coche <b>Instagram</b>, « Application lancée ».</li>
+      <li>Action : <b>Ouvrir un site web</b> → colle le lien ci‑dessus.</li>
+      <li>Enregistre la macro. Pense à autoriser MacroDroid à « s'afficher par-dessus » si Android le demande.</li>
+      <li>Bonus : dans Chrome, menu ⋮ → <b>Ajouter à l'écran d'accueil</b>.</li>
+    </ol>
+  </details>
+</section>
+
+</main>
+
+<nav aria-label="Navigation">
+  <div>
+    <button data-go="pause" aria-current="page">Pause</button>
+    <button data-go="miroir">Miroir</button>
+    <button data-go="reglages">Réglages</button>
+  </div>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  const KEY='frottement.v1';
+  const DEFAULT_APPS=[
+    {name:'Instagram',scheme:'instagram://'},
+    {name:'YouTube',scheme:'youtube://'},
+    {name:'TikTok',scheme:'tiktok://'},
+    {name:'X',scheme:'twitter://'},
+    {name:'Autre',scheme:''}
+  ];
+  const REASONS={info:'Une info précise',evade:'Me changer les idées',reflex:'Rien, réflexe'};
+  const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- Stockage ----------
+  let state=load();
+  function load(){
+    try{
+      const raw=localStorage.getItem(KEY);
+      if(raw){const s=JSON.parse(raw); if(s&&Array.isArray(s.entries)&&Array.isArray(s.apps)) return s;}
+    }catch(e){}
+    return {apps:DEFAULT_APPS.map(a=>({...a})),entries:[],theme:'auto'};
+  }
+  function save(){ try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){toast("Impossible d'enregistrer sur ce navigateur");} }
+
+  // ---------- Utilitaires ----------
+  const $=s=>document.querySelector(s);
+  const el=(t,c,txt)=>{const n=document.createElement(t); if(c)n.className=c; if(txt!=null)n.textContent=txt; return n;};
+  let toastT;
+  function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200);}
+  function slug(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'');}
+  function fmtHour(d){return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
+  function fmtDay(d){return d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});}
+  function greeting(h){
+    if(h>=23||h<5) return 'Il est tard.';
+    if(h<9) return 'Le matin, déjà ?';
+    if(h<12) return 'En pleine matinée.';
+    if(h<14) return 'Pause de midi.';
+    if(h<19) return "Au cœur de l'après-midi.";
+    if(h<22) return 'Ce soir.';
+    return 'La nuit tombe.';
+  }
+
+  // ---------- Navigation ----------
+  function show(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
+    document.querySelectorAll('nav button').forEach(b=>{ if(b.dataset.go===id) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
+    if(id==='miroir') renderMiroir();
+    if(id==='reglages') renderReglages();
+    if(id==='pause') resetPause();
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.go)));
+
+  // ---------- Pause ----------
+  let currentApp=null, currentReason=null, breathTimer=null;
+  function pickApp(name){ currentApp=name; document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.app===name))); }
+  function renderApps(){
+    const box=$('#apps'); box.innerHTML='';
+    state.apps.forEach(a=>{ const c=el('button','chip',a.name); c.dataset.app=a.name; c.setAttribute('aria-pressed','false'); c.addEventListener('click',()=>pickApp(a.name)); box.appendChild(c); });
+    // appli passée dans l'URL (?app=instagram) sinon la première
+    const p=new URLSearchParams(location.search).get('app');
+    const match=p && state.apps.find(a=>slug(a.name)===slug(p));
+    pickApp(match?match.name:(state.apps[0]?state.apps[0].name:'Autre'));
+  }
+  function resetPause(){
+    clearTimeout(breathTimer);
+    $('#askBlock').style.display='';
+    $('#breath').classList.remove('on');
+    $('#decide').classList.remove('on');
+    $('#hour').textContent=greeting(new Date().getHours());
+    currentReason=null;
+  }
+  document.querySelectorAll('.reason').forEach(b=>b.addEventListener('click',()=>{
+    currentReason=b.dataset.reason;
+    $('#askBlock').style.display='none';
+    const br=$('#breath'); br.classList.add('on');
+    const word={info:'Très bien. Va la chercher, puis reviens.',evade:'C\'est légitime. Choisis ce que tu regardes.',reflex:'Merci pour l\'honnêteté.'}[currentReason];
+    $('#breathWord').textContent='Respire.';
+    $('#hint').textContent=word;
+    // restart the animation
+    const c=br.querySelector('.circle'); c.style.animation='none'; void c.offsetWidth; c.style.animation='';
+    const delay=REDUCED?0:3200;
+    breathTimer=setTimeout(()=>{ $('#breathWord').textContent=word; $('#hint').textContent=''; $('#decide').classList.add('on'); },delay);
+  }));
+  function record(outcome){
+    state.entries.push({t:Date.now(),app:currentApp,reason:currentReason,outcome});
+    if(state.entries.length>5000) state.entries=state.entries.slice(-5000);
+    save();
+  }
+  $('#goBtn').addEventListener('click',()=>{
+    record('go');
+    const a=state.apps.find(x=>x.name===currentApp);
+    if(a&&a.scheme){ location.href=a.scheme; }
+    else toast("À toi de jouer, l'appli t'attend.");
+    setTimeout(resetPause,800);
+  });
+  $('#stayBtn').addEventListener('click',()=>{
+    record('stay');
+    toast('Bien joué. Le doigt a hésité.');
+    setTimeout(resetPause,900);
+  });
+
+  // ---------- Miroir ----------
+  function renderMiroir(){
+    const body=$('#miroirBody'); body.innerHTML='';
+    const all=state.entries.slice().sort((a,b)=>a.t-b.t);
+    if(!all.length){ body.appendChild(el('p','empty','Rien encore. Le miroir se remplit au fil de tes pauses.')); return; }
+    const weekAgo=Date.now()-7*864e5;
+    const week=all.filter(e=>e.t>=weekAgo);
+    const stays=week.filter(e=>e.outcome==='stay').length;
+    const reflex=week.filter(e=>e.reason==='reflex').length;
+
+    // Chiffres
+    const fig=el('div','fig');
+    fig.appendChild(figure(week.length,'pauses cette semaine'));
+    fig.appendChild(figure(stays,stays>1?'demi-tours':'demi-tour'));
+    fig.appendChild(figure(week.length?Math.round(100*reflex/week.length)+' %':'—','par réflexe'));
+    body.appendChild(fig);
+
+    // Ce que tu venais chercher
+    const src=week.length?week:all;
+    body.appendChild(el('h2',null,'Ce que tu venais chercher'));
+    const bars=el('div','bars');
+    Object.keys(REASONS).forEach(k=>{
+      const n=src.filter(e=>e.reason===k).length;
+      const b=el('div','bar'); b.appendChild(el('span',null,REASONS[k]));
+      const i=el('i'); i.style.width=(src.length?100*n/src.length:0)+'%'; b.appendChild(i);
+      b.appendChild(el('span',null,String(n))); bars.appendChild(b);
+    });
+    body.appendChild(bars);
+
+    // Par appli
+    const byApp={}; src.forEach(e=>{byApp[e.app]=(byApp[e.app]||0)+1;});
+    const appsSorted=Object.entries(byApp).sort((a,b)=>b[1]-a[1]);
+    if(appsSorted.length>1){
+      body.appendChild(el('h2',null,'Par appli'));
+      const ab=el('div','bars');
+      appsSorted.forEach(([name,n])=>{ const b=el('div','bar'); b.appendChild(el('span',null,name)); const i=el('i','s'); i.style.width=(100*n/src.length)+'%'; b.appendChild(i); b.appendChild(el('span',null,String(n))); ab.appendChild(b); });
+      body.appendChild(ab);
+    }
+
+    // Heures
+    body.appendChild(el('h2',null,'À quelle heure'));
+    body.appendChild(hoursChart(src));
+
+    // Lecture
+    const ins=el('div','insight');
+    insights(src).forEach(s=>ins.appendChild(el('p',null,s)));
+    body.appendChild(ins);
+
+    // Journal
+    body.appendChild(el('h2',null,'Dernières pauses'));
+    const log=el('ul','log');
+    all.slice(-12).reverse().forEach(e=>{
+      const li=el('li'); const d=new Date(e.t);
+      li.appendChild(el('span',null,`${e.app} — ${REASONS[e.reason]||e.reason}${e.outcome==='stay'?' · demi-tour':''}`));
+      li.appendChild(el('span',null,`${fmtDay(d)} ${fmtHour(d)}`));
+      log.appendChild(li);
+    });
+    body.appendChild(log);
+  }
+  function figure(v,label){const d=el('div');d.appendChild(el('b',null,String(v)));d.appendChild(el('span',null,label));return d;}
+  function hoursChart(src){
+    const counts=new Array(24).fill(0); src.forEach(e=>counts[new Date(e.t).getHours()]++);
+    const max=Math.max(1,...counts);
+    const W=480,H=120,bw=W/24;
+    let s=`<svg class="hours" viewBox="0 0 ${W} ${H+22}" role="img" aria-label="Pauses par heure de la journée">`;
+    counts.forEach((n,h)=>{
+      const bh=n?Math.max(4,(n/max)*H):2;
+      s+=`<rect x="${(h*bw+2).toFixed(1)}" y="${(H-bh).toFixed(1)}" width="${(bw-4).toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="${n?'var(--lamp)':'var(--line)'}"/>`;
+    });
+    [0,6,12,18,23].forEach(h=>{ s+=`<text x="${(h*bw+bw/2).toFixed(1)}" y="${H+17}" font-size="12" text-anchor="middle" fill="var(--ink2)" font-family="Atkinson Hyperlegible,system-ui,sans-serif">${h}h</text>`; });
+    s+='</svg>';
+    const wrap=el('div'); wrap.innerHTML=s; return wrap.firstChild;
+  }
+  function insights(src){
+    const out=[];
+    if(src.length<5){ out.push('Encore quelques pauses et le miroir commencera à parler.'); return out; }
+    // créneau le plus chargé (fenêtre de 3 h)
+    const counts=new Array(24).fill(0); src.forEach(e=>counts[new Date(e.t).getHours()]++);
+    let best=0,bestN=-1;
+    for(let h=0;h<24;h++){ const n=counts[h]+counts[(h+1)%24]+counts[(h+2)%24]; if(n>bestN){bestN=n;best=h;} }
+    const late=src.filter(e=>{const h=new Date(e.t).getHours();return h>=22||h<2;});
+    const lateReflex=late.filter(e=>e.reason==='reflex').length;
+    if(late.length>=3&&lateReflex/late.length>=.6) out.push(`Après 22 h, ${lateReflex} fois sur ${late.length}, c'est le réflexe qui ouvre l'appli. Pas toi.`);
+    else out.push(`Ton créneau le plus fréquenté : entre ${best} h et ${(best+3)%24} h.`);
+    const byApp={}; src.forEach(e=>{byApp[e.app]=byApp[e.app]||{n:0,r:0};byApp[e.app].n++; if(e.reason==='reflex')byApp[e.app].r++;});
+    const anes=Object.entries(byApp).filter(([,v])=>v.n>=3).sort((a,b)=>(b[1].r/b[1].n)-(a[1].r/a[1].n))[0];
+    if(anes&&anes[1].r/anes[1].n>=.5) out.push(`${anes[0]} joue souvent le rôle d'anesthésiant : ${Math.round(100*anes[1].r/anes[1].n)} % d'ouvertures par réflexe.`);
+    const stays=src.filter(e=>e.outcome==='stay').length;
+    if(stays) out.push(`${stays} demi-tour${stays>1?'s':''}. Ce n'est pas rien : c'est exactement le moment où le doigt hésite.`);
+    else out.push('Aucun demi-tour pour l\'instant, et ce n\'est pas un problème. Lucidité d\'abord.');
+    return out;
+  }
+
+  // ---------- Réglages ----------
+  function renderReglages(){
+    const list=$('#appList'); list.innerHTML='';
+    state.apps.forEach((a,i)=>{
+      const r=el('div','row'); r.appendChild(el('span','name',a.name)); r.appendChild(el('code',null,a.scheme||'—'));
+      const x=el('button','x','✕'); x.setAttribute('aria-label','Retirer '+a.name);
+      x.addEventListener('click',()=>{ state.apps.splice(i,1); save(); renderReglages(); renderApps(); });
+      r.appendChild(x); list.appendChild(r);
+    });
+    $('#theme').value=state.theme||'auto';
+    const base=location.origin+location.pathname;
+    $('#autoLink').textContent=base+'?app=instagram';
+  }
+  $('#addForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const name=$('#newName').value.trim(); let scheme=$('#newScheme').value.trim();
+    if(!name) return;
+    if(scheme&&!/:\/\/|:$/.test(scheme)) scheme+='://';
+    state.apps.push({name,scheme}); save();
+    $('#newName').value=''; $('#newScheme').value='';
+    renderReglages(); renderApps(); toast(name+' ajouté');
+  });
+  $('#theme').addEventListener('change',e=>{ state.theme=e.target.value; save(); applyTheme(); });
+  function applyTheme(){ const t=state.theme||'auto'; if(t==='auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',t); }
+  $('#exportBtn').addEventListener('click',async()=>{
+    const txt=JSON.stringify(state);
+    try{ await navigator.clipboard.writeText(txt); toast('Sauvegarde copiée. Colle-la dans une note.'); }
+    catch(e){ prompt('Copie ce texte et garde-le dans une note :',txt); }
+  });
+  $('#importBtn').addEventListener('click',()=>{
+    const txt=prompt('Colle ici ta sauvegarde :'); if(!txt) return;
+    try{ const s=JSON.parse(txt); if(!Array.isArray(s.entries)||!Array.isArray(s.apps)) throw 0; state=s; save(); applyTheme(); renderApps(); renderReglages(); toast('Sauvegarde restaurée'); }
+    catch(e){ toast('Ce texte ne ressemble pas à une sauvegarde Frottement'); }
+  });
+  $('#resetBtn').addEventListener('click',()=>{
+    if(!confirm('Effacer toutes les pauses et remettre les applis par défaut ?')) return;
+    state={apps:DEFAULT_APPS.map(a=>({...a})),entries:[],theme:state.theme||'auto'}; save(); renderApps(); renderReglages(); toast('Tout est effacé');
+  });
+
+  // ---------- Démarrage ----------
+  applyTheme(); renderApps(); resetPause();
+})();
+</script>
+</body>
+</html>
